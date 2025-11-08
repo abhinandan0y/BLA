@@ -7,33 +7,43 @@ on:
 
 jobs:
   build:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout code
+      # Step 1: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      # Step 2: List files for debugging
+      - name: List repo files
+        run: ls -R
+
+      # Step 3: Set up Python
+      - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: 3.10
 
+      # Step 4: Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install briefcase
 
-      - name: Build with Briefcase
+      # Step 5: Build with Briefcase
+      - name: Create, build, and package app
         run: |
-          briefcase create ${{ matrix.os }}
-          briefcase build ${{ matrix.os }}
-          briefcase package ${{ matrix.os }}
+          echo "Building for ${{ matrix.os }}..."
+          briefcase create ${GITHUB_RUN_NUMBER}-${{ matrix.os }}
+          briefcase build ${GITHUB_RUN_NUMBER}-${{ matrix.os }}
+          briefcase package ${GITHUB_RUN_NUMBER}-${{ matrix.os }}
 
-      - name: Upload artifacts
+      # Step 6: Upload artifacts
+      - name: Upload built executables
         uses: actions/upload-artifact@v4
         with:
           name: BLA-${{ matrix.os }}
@@ -43,19 +53,22 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifacts
+      # Step 1: Download artifacts from all OS builds
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist/
 
-      - name: Create GitHub Release
+      # Step 2: Create GitHub release
+      - name: Create GitHub Release v1.0.0
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload release assets
+      # Step 3: Upload all executables to release
+      - name: Upload executables to release
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*
