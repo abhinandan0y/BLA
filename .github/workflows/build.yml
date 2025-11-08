@@ -7,10 +7,10 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout code
@@ -29,16 +29,16 @@ jobs:
 
       - name: Build with Briefcase
         run: |
-          briefcase create ${matrix.os}
-          briefcase build ${matrix.os}
-          briefcase package ${matrix.os}
+          briefcase create ${{ matrix.os }}
+          briefcase build ${{ matrix.os }}
+          briefcase package ${{ matrix.os }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: BLA-${{ matrix.os }}
           path: dist/*
-          
+
   release:
     needs: build
     runs-on: ubuntu-latest
