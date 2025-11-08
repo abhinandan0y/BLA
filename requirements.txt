@@ -1,0 +1,4 @@
+selenium
+Pillow
+ttkbootstrap
+webdriver-manager
